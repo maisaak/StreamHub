@@ -42,8 +42,8 @@ test("onboarding → search → card → watchlist → theme", async ({ page }) 
   await expect(page.getByRole("heading", { name: "Матрица" })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole("button", { name: /Смотреть ·/ }).first()).toBeVisible();
 
-  // add to watchlist
-  await page.getByRole("button", { name: "В список" }).click();
+  // add to watchlist (scoped: similar cards also have "В список" buttons)
+  await page.getByTestId("detail-actions").getByRole("button", { name: "В список" }).click();
   await expect(page.getByText("Сохранено в список")).toBeVisible({ timeout: 10_000 });
 
   // watchlist contains it

@@ -224,7 +224,7 @@ export default function ContentDetail() {
             ) : (
               <p className="text-sm text-neutral-500">Источники скоро появятся.</p>
             )}
-            <div className="flex gap-1">
+            <div className="flex gap-1" data-testid="detail-actions">
               <IconBtn label={saved ? "Убрать из списка" : "В список"} onClick={toggleList}>
                 {saved ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
               </IconBtn>
