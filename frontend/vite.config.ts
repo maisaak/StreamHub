@@ -22,8 +22,10 @@ export default defineConfig({
     allowedHosts: true as unknown as string[],
     hmr: { clientPort: 443 },
     proxy: {
+      // NOTE: "/s" must keep the trailing slash — plain "/s" is a prefix
+      // that would also swallow /src/*, /search, /services, /settings.
       "/api": { target: "http://localhost:8000", changeOrigin: true },
-      "/s": { target: "http://localhost:8000", changeOrigin: true },
+      "/s/": { target: "http://localhost:8000", changeOrigin: true },
       "/health": { target: "http://localhost:8000", changeOrigin: true },
     },
   },
