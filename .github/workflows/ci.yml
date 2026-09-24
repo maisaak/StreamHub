@@ -51,6 +51,9 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     needs: [backend, frontend]
+    permissions:
+      pull-requests: write
+      checks: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -86,14 +89,39 @@ jobs:
           name: pw-log
           path: /tmp/pw.log
           retention-days: 1
-      - name: Report E2E failure to PR
+      - name: Publish E2E log as check run
         if: failure()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
-          PR=$(gh pr list --head "$BRANCH" --json number -q '.[0].number')
-          if [ -z "$PR" ]; then echo "no PR found for branch $BRANCH"; exit 0; fi
+          python3 - <<'PYEOF'
+          import json
+          def tail(path, n):
+              try:
+                  return open(path, errors="replace").read()[-n:]
+              except OSError:
+                  return f"(missing {path})"
+          payload = {
+              "name": "e2e-log",
+              "head_sha": "${{ github.sha }}",
+              "status": "completed",
+              "conclusion": "failure",
+              "output": {
+                  "title": "Playwright output (tail)",
+                  "summary": "tail of /tmp/pw.log, /tmp/api.log, /tmp/web.log",
+                  "text": ("=== pw.log ===\n" + tail("/tmp/pw.log", 50000)
+                           + "\n=== api.log ===\n" + tail("/tmp/api.log", 6000)
+                           + "\n=== web.log ===\n" + tail("/tmp/web.log", 6000))[-60000:],
+              },
+          }
+          open("/tmp/check.json", "w").write(json.dumps(payload))
+          PYEOF
+          gh api "repos/${{ github.repository }}/check-runs" -X POST --input /tmp/check.json
+      - name: Report E2E failure to PR
+        if: failure() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           {
             echo "### E2E failure diagnostics (\`$GITHUB_SHA\`)"
             echo ""
