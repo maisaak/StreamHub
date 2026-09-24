@@ -26,7 +26,7 @@ test("onboarding → search → card → watchlist → theme", async ({ page }) 
   // step 3: value screen -> finish
   await expect(page.getByText("Готово! Вот что можно посмотреть прямо сейчас")).toBeVisible();
   await page.getByRole("button", { name: /Начать смотреть/ }).click();
-  await expect(page).toHaveURL(/^\/$|\/\?/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/(\?.*)?$/, { timeout: 15_000 });
 
   // search with typo
   const search = page.getByRole("combobox");

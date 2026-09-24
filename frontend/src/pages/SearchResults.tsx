@@ -58,7 +58,6 @@ export default function SearchResults() {
     <div className="mx-auto max-w-6xl px-4 pb-16">
       <div className="sticky top-[57px] z-20 -mx-4 bg-neutral-50/90 px-4 py-3 backdrop-blur dark:bg-[#0f0f14]/90 max-md:top-[97px]">
         <SearchBar
-          key={q}
           initial={q}
           onQueryChange={(next) => {
             if (next !== q) {
