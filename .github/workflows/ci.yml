@@ -84,8 +84,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PR=$(gh pr list --head "${GITHUB_REF_NAME}" --json number -q '.[0].number')
-          if [ -z "$PR" ]; then echo "no PR found"; exit 0; fi
+          BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+          PR=$(gh pr list --head "$BRANCH" --json number -q '.[0].number')
+          if [ -z "$PR" ]; then echo "no PR found for branch $BRANCH"; exit 0; fi
           {
             echo "### E2E failure diagnostics (\`$GITHUB_SHA\`)"
             echo ""
