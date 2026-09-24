@@ -77,5 +77,35 @@ jobs:
             sleep 2
           done
       - name: Playwright
-        run: npx playwright test
+        run: npx playwright test --reporter=list 2>&1 | tee /tmp/pw.log; test ${PIPESTATUS[0]} -eq 0
         working-directory: frontend
+      - name: Report E2E failure to PR
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR=$(gh pr list --head "${GITHUB_REF_NAME}" --json number -q '.[0].number')
+          if [ -z "$PR" ]; then echo "no PR found"; exit 0; fi
+          {
+            echo "### E2E failure diagnostics (\`$GITHUB_SHA\`)"
+            echo ""
+            echo "<details><summary>playwright output (tail)</summary>"
+            echo ""
+            echo '```'
+            tail -c 12000 /tmp/pw.log
+            echo '```'
+            echo "</details>"
+            echo "<details><summary>api log (tail)</summary>"
+            echo ""
+            echo '```'
+            tail -c 4000 /tmp/api.log
+            echo '```'
+            echo "</details>"
+            echo "<details><summary>web log (tail)</summary>"
+            echo ""
+            echo '```'
+            tail -c 4000 /tmp/web.log
+            echo '```'
+            echo "</details>"
+          } > /tmp/comment.md
+          gh pr comment "$PR" --body-file /tmp/comment.md
